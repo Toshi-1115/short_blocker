@@ -24,14 +24,14 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["content/youtube.js"],
-      "css": ["styles/youtube.css"],
+      "js": ["content/messages.js", "content/youtube.js"],
+      "css": ["styles/overlay.css", "styles/youtube.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["*://*.x.com/*", "*://*.twitter.com/*"],
-      "js": ["content/x.js"],
-      "css": ["styles/x.css"],
+      "js": ["content/messages.js", "content/x.js"],
+      "css": ["styles/overlay.css", "styles/x.css"],
       "run_at": "document_idle"
     }
   ]

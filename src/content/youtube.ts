@@ -1,103 +1,112 @@
 /**
  * YouTube Shorts ブロック用 Content Script
- *
- * 非表示対象:
- * - トップページ・検索結果のShortsシェルフ（横スクロール一覧）
- * - サイドバーの「ショート」ナビゲーションリンク
- * - 動画の横に表示されるShortsサムネイル
- * - Shortsタブ内のコンテンツ
+ * messages.js より後に読み込まれる前提（sbApplyOverlay がグローバルに存在）
  */
 (() => {
 
-/** Shorts要素を検出するセレクタ一覧 */
-const SHORTS_SELECTORS = [
-  // Shortsシェルフ（トップ・検索結果）
-  "ytd-rich-shelf-renderer[is-shorts]",
-  "ytd-reel-shelf-renderer",
-  // サイドバーのShortsリンク
-  'ytd-guide-entry-renderer a[title="ショート"]',
-  'ytd-mini-guide-entry-renderer a[title="ショート"]',
-  // Shorts個別サムネイル
-  'ytd-grid-video-renderer a[href*="/shorts/"]',
-  'ytd-video-renderer a[href*="/shorts/"]',
-  'ytd-rich-item-renderer:has(a[href*="/shorts/"])',
-  // 検索結果内のShortsセクション
-  "ytd-reel-shelf-renderer",
-] as const;
-
 let enabled = true;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let lastUrl = location.href;
+let redirecting = false;
 
-/** Shorts要素を非表示にする */
-function hideShorts(): void {
-  if (!enabled) return;
-
-  let blockedInBatch = 0;
-  const selector = SHORTS_SELECTORS.join(", ");
-
-  document.querySelectorAll<HTMLElement>(selector).forEach((el) => {
-    if (el.style.display !== "none") {
-      el.style.display = "none";
-      blockedInBatch++;
+/** 最も近い "renderer" カスタム要素を探す */
+function findRenderer(el: HTMLElement): HTMLElement | null {
+  let current = el.parentElement;
+  while (current && current !== document.body) {
+    const tag = current.tagName.toLowerCase();
+    if (tag.includes("-") && (tag.includes("renderer") || tag.includes("model"))) {
+      return current;
     }
-  });
+    current = current.parentElement;
+  }
+  return null;
+}
 
-  // /shorts/ URLへの直リンクを持つ要素の親を非表示
-  document
-    .querySelectorAll<HTMLAnchorElement>('a[href*="/shorts/"]')
-    .forEach((a) => {
-      const renderer =
-        a.closest("ytd-rich-item-renderer") ??
-        a.closest("ytd-grid-video-renderer") ??
-        a.closest("ytd-video-renderer") ??
-        a.closest("ytd-compact-video-renderer");
-      if (renderer && (renderer as HTMLElement).style.display !== "none") {
-        (renderer as HTMLElement).style.display = "none";
-        blockedInBatch++;
-      }
-    });
-
-  if (blockedInBatch > 0) {
-    chrome.runtime.sendMessage({
-      type: "INCREMENT_BLOCKED",
-      site: "youtube",
-    });
+/** chrome.runtime が有効か確認してからメッセージ送信 */
+function safeSendMessage(msg: any): Promise<any> {
+  try {
+    if (!chrome.runtime?.id) return Promise.resolve(null);
+    return chrome.runtime.sendMessage(msg);
+  } catch {
+    return Promise.resolve(null);
   }
 }
 
-/** debounce付きでhideShortsを呼ぶ */
-function debouncedHideShorts(): void {
+/** /shorts/ リンクを持つ動画を個別にブロック */
+function blockShorts(): void {
+  if (!enabled || redirecting) return;
+
+  let blockedInBatch = 0;
+
+  document
+    .querySelectorAll<HTMLAnchorElement>('a[href*="/shorts/"]')
+    .forEach((a) => {
+      if (a.closest("[data-sb-blocked]") || a.closest(".sb-wrapper")) return;
+      if (a.closest("ytd-guide-renderer, ytd-mini-guide-renderer, #guide")) return;
+
+      const renderer = findRenderer(a) ?? a;
+      if (sbApplyOverlay(renderer)) blockedInBatch++;
+    });
+
+  if (blockedInBatch > 0) {
+    safeSendMessage({ type: "INCREMENT_BLOCKED", site: "youtube" });
+  }
+}
+
+/** debounce付き */
+function debouncedBlock(): void {
   if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(hideShorts, 200);
+  debounceTimer = setTimeout(blockShorts, 200);
 }
 
 /** MutationObserverでDOM変更を監視 */
 function observe(): void {
-  const observer = new MutationObserver(debouncedHideShorts);
+  const observer = new MutationObserver(() => {
+    if (redirecting) return;
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      if (redirectIfShortsPage()) return;
+    }
+    debouncedBlock();
+  });
   observer.observe(document.body, {
     childList: true,
     subtree: true,
   });
 }
 
-/** 設定を取得して初期化 */
+/** Shortsページならトップにリダイレクト（1回だけ） */
+function redirectIfShortsPage(): boolean {
+  if (redirecting) return true;
+  if (location.pathname.startsWith("/shorts/")) {
+    redirecting = true;
+    location.replace("https://www.youtube.com/");
+    return true;
+  }
+  return false;
+}
+
+/** 初期化 */
 async function init(): Promise<void> {
-  const settings = await chrome.runtime.sendMessage({ type: "GET_SETTINGS" });
+  const settings = await safeSendMessage({ type: "GET_SETTINGS" });
+  if (!settings) return;
   enabled = settings.youtube.enabled;
 
   if (enabled) {
-    hideShorts();
+    if (redirectIfShortsPage()) return;
+    blockShorts();
     observe();
   }
 }
 
 /** 設定変更をリアルタイム反映 */
 chrome.storage.onChanged.addListener((changes) => {
+  if (redirecting) return;
   if (changes.settings) {
     const newSettings = changes.settings.newValue;
     enabled = newSettings.youtube.enabled;
     if (enabled) {
-      hideShorts();
+      redirectIfShortsPage() || blockShorts();
     }
   }
 });

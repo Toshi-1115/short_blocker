@@ -1,5 +1,3 @@
-import type { Settings } from "../types.js";
-
 const youtubeToggle = document.getElementById("youtube-toggle") as HTMLInputElement;
 const xToggle = document.getElementById("x-toggle") as HTMLInputElement;
 const youtubeCount = document.getElementById("youtube-count") as HTMLElement;
@@ -7,7 +5,7 @@ const xCount = document.getElementById("x-count") as HTMLElement;
 const totalCount = document.getElementById("total-count") as HTMLElement;
 
 /** UIに設定を反映 */
-function renderSettings(settings: Settings): void {
+function renderSettings(settings: any): void {
   youtubeToggle.checked = settings.youtube.enabled;
   xToggle.checked = settings.x.enabled;
   youtubeCount.textContent = `${settings.youtube.blockedCount} 件ブロック`;
@@ -18,7 +16,7 @@ function renderSettings(settings: Settings): void {
 }
 
 /** 設定を保存 */
-async function saveSettings(settings: Settings): Promise<void> {
+async function saveSettings(settings: any): Promise<void> {
   await chrome.runtime.sendMessage({
     type: "UPDATE_SETTINGS",
     settings,
@@ -27,7 +25,7 @@ async function saveSettings(settings: Settings): Promise<void> {
 
 /** 初期化 */
 async function init(): Promise<void> {
-  const settings: Settings = await chrome.runtime.sendMessage({
+  const settings: any = await chrome.runtime.sendMessage({
     type: "GET_SETTINGS",
   });
   renderSettings(settings);

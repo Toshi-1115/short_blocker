@@ -6,6 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 YouTubeとX（旧Twitter）のショート動画（YouTube Shorts、Xの短尺動画）を非表示・無効化するChrome拡張機能。
 
+### 仕様決定事項
+
+- **対象サイト**: YouTube + X の2サイトのみ
+- **ブロック方式**: 完全非表示（`display: none` でDOM要素を隠す）
+- **ポップアップUI**: サイト別ON/OFF切替 + ブロック数の統計表示
+- **UI言語**: 日本語のみ（i18n不要）
+
 ## 技術スタック
 
 - Chrome Extension Manifest V3

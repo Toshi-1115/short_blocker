@@ -1,0 +1,15 @@
+{
+  "name": "short_blocker",
+  "version": "1.0.0",
+  "description": "YouTube/Xのショート動画を非表示にするChrome拡張機能",
+  "scripts": {
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp src/manifest.json dist/ && cp -r src/styles dist/ && cp src/popup/popup.html dist/popup/ && cp -r src/icons dist/",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "typescript": "^5.7.0"
+  }
+}

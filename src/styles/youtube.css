@@ -1,0 +1,21 @@
+/* YouTube Shorts 非表示CSS（初期読み込み時のちらつき防止） */
+
+/* Shortsシェルフ */
+ytd-rich-shelf-renderer[is-shorts],
+ytd-reel-shelf-renderer {
+  display: none !important;
+}
+
+/* サイドバーのショートリンク */
+ytd-guide-entry-renderer a[title="ショート"],
+ytd-mini-guide-entry-renderer a[title="ショート"] {
+  display: none !important;
+}
+
+/* Shorts個別サムネイル */
+ytd-rich-item-renderer:has(a[href*="/shorts/"]),
+ytd-grid-video-renderer:has(a[href*="/shorts/"]),
+ytd-video-renderer:has(a[href*="/shorts/"]),
+ytd-compact-video-renderer:has(a[href*="/shorts/"]) {
+  display: none !important;
+}

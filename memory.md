@@ -3,7 +3,7 @@
 ## 現在の状態
 
 - v1.0 完成、動作確認済み
-- GitHub push済み: https://github.com/Toshi-1115/short_blocker
+- GitHub push済み
 
 ## アーキテクチャ
 

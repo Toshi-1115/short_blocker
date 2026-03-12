@@ -23,6 +23,16 @@
 - サイドバー「ショート」表示 → CSS :has()セレクタ + JS除外
 - タイトルへの二重オーバーレイ → .sb-wrapper除外チェック
 
+## iOS対応（Quantumult X）
+
+- Quantumult Xで YouTube Shortsブロック設定完了
+- ddgksf2013/Rewrite の YoutubeAds.conf を rewrite_remote で導入
+- Maasea氏のJSスクリプトがProtobufレベルでレスポンス書き換え（広告除去+Shorts除去+PiP+バックグラウンド再生）
+- ローカルルール追加: `reel/` エンドポイントを `reject-dict` で遮断
+- 結果: フィード・タブ・関連動画からShorts除去済み、連続再生も停止。チャンネル内の個別Shorts再生のみ残存（許容範囲）
+- X（Twitter）のiOS Shortsブロックは既存スクリプトなし → Chrome拡張でカバー
+- NordVPNとの同時利用不可（iOS制限）→ 手動切替で運用
+
 ## TODO
 
 - [ ] アイコンを正式なデザインに差し替え（現在プレースホルダー）

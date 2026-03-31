@@ -22,6 +22,7 @@
 - Extension context invalidated → chrome.runtime.id存在確認+try-catch
 - サイドバー「ショート」表示 → CSS :has()セレクタ + JS除外
 - タイトルへの二重オーバーレイ → .sb-wrapper除外チェック
+- 通常動画ホバー時に誤ブロック（2026-03-31）→ YouTube DOM変更で通常動画renderer内にShortsリンク混在。ホバープレビュー要素の除外 + 主サムネイルURL検証で修正（youtube.ts L46-55）
 
 ## iOS対応（Quantumult X）
 

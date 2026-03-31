@@ -43,8 +43,17 @@ function blockShorts(): void {
     .forEach((a) => {
       if (a.closest("[data-sb-blocked]") || a.closest(".sb-wrapper")) return;
       if (a.closest("ytd-guide-renderer, ytd-mini-guide-renderer, #guide")) return;
+      // ホバープレビュー・オーバーレイ内のShortsリンクは除外
+      if (a.closest("#video-preview, ytd-video-preview, #inline-preview, #hover-overlays, tp-yt-paper-tooltip")) return;
 
       const renderer = findRenderer(a) ?? a;
+
+      // rendererの主サムネイルが通常動画(/shorts/以外)なら誤爆なのでスキップ
+      if (renderer !== a) {
+        const mainThumb = renderer.querySelector<HTMLAnchorElement>('a#thumbnail');
+        if (mainThumb && !mainThumb.href.includes("/shorts/")) return;
+      }
+
       if (sbApplyOverlay(renderer)) blockedInBatch++;
     });
 
